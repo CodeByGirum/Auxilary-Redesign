@@ -1,0 +1,131 @@
+import { Project, Notification, Activity, Contact } from './types';
+import { 
+  Layout, Globe, Coffee, PenTool, Smartphone, 
+  Briefcase, CreditCard, ShoppingCart, Music 
+} from 'lucide-react';
+
+export const MOCK_PROJECTS: Project[] = [
+  {
+    id: '1',
+    name: 'SnowUI',
+    dueDate: 'Nov 10, 2022',
+    status: 'In Progress',
+    totalTasks: 49,
+    completedTasks: 36,
+    members: ['https://picsum.photos/30/30?random=1'],
+    iconColor: 'text-blue-500 bg-blue-100',
+    icon: Layout,
+  },
+  {
+    id: '2',
+    name: 'Coffee detail page',
+    dueDate: 'Nov 10, 2022',
+    status: 'Complete',
+    totalTasks: 56,
+    completedTasks: 56,
+    members: ['https://picsum.photos/30/30?random=2'],
+    iconColor: 'text-purple-500 bg-purple-100',
+    icon: Coffee,
+  },
+  {
+    id: '3',
+    name: 'Drinking bottle graphics',
+    dueDate: 'Nov 10, 2022',
+    status: 'Rejected',
+    totalTasks: 65,
+    completedTasks: 16,
+    members: ['https://picsum.photos/30/30?random=3'],
+    iconColor: 'text-blue-600 bg-blue-100',
+    icon: Globe,
+  },
+  {
+    id: '4',
+    name: 'Company logo design',
+    dueDate: 'Feb 21, 2022',
+    status: 'Complete',
+    totalTasks: 20,
+    completedTasks: 20,
+    members: ['https://picsum.photos/30/30?random=4'],
+    iconColor: 'text-orange-500 bg-orange-100',
+    icon: PenTool,
+  },
+  {
+    id: '5',
+    name: 'Landing page design',
+    dueDate: 'Jun 20, 2022',
+    status: 'Pending',
+    totalTasks: 23,
+    completedTasks: 5,
+    members: ['https://picsum.photos/30/30?random=5', 'https://picsum.photos/30/30?random=6', 'https://picsum.photos/30/30?random=7'],
+    iconColor: 'text-black bg-gray-200',
+    icon: Smartphone,
+  },
+  {
+    id: '6',
+    name: 'Product page redesign',
+    dueDate: 'Jun 20, 2022',
+    status: 'In Progress',
+    totalTasks: 49,
+    completedTasks: 12,
+    members: ['https://picsum.photos/30/30?random=8'],
+    iconColor: 'text-pink-500 bg-pink-100',
+    icon: ShoppingCart,
+  },
+  {
+    id: '7',
+    name: 'Coffee detail page',
+    dueDate: 'Jun 24, 2022',
+    status: 'Rejected',
+    totalTasks: 12,
+    completedTasks: 8,
+    members: ['https://picsum.photos/30/30?random=9'],
+    iconColor: 'text-black bg-gray-200',
+    icon: Coffee,
+  },
+  {
+    id: '8',
+    name: 'Aviasales App',
+    dueDate: 'Oct 25, 2022',
+    status: 'Approved',
+    totalTasks: 20,
+    completedTasks: 17,
+    members: ['https://picsum.photos/30/30?random=10'],
+    iconColor: 'text-yellow-500 bg-yellow-100',
+    icon: Briefcase,
+  },
+  {
+    id: '9',
+    name: 'Finance Dispatch',
+    dueDate: 'Nov 10, 2022',
+    status: 'Pending',
+    totalTasks: 19,
+    completedTasks: 2,
+    members: ['https://picsum.photos/30/30?random=11'],
+    iconColor: 'text-green-500 bg-green-100',
+    icon: CreditCard,
+  },
+];
+
+export const NOTIFICATIONS: Notification[] = [
+  { id: '1', user: 'Bug Report', avatar: 'https://picsum.photos/40/40?random=20', action: 'You have a bug that needs...', time: 'Just now' },
+  { id: '2', user: 'New User', avatar: 'https://picsum.photos/40/40?random=21', action: 'New user registered', time: '59 minutes ago' },
+  { id: '3', user: 'Bug Report', avatar: 'https://picsum.photos/40/40?random=20', action: 'You have a bug that needs...', time: '12 hours ago' },
+  { id: '4', user: 'Andi Lane', avatar: 'https://picsum.photos/40/40?random=23', action: 'subscribed to you', time: 'Today, 11:59 AM' },
+];
+
+export const ACTIVITIES: Activity[] = [
+  { id: '1', user: 'Bug Report', avatar: 'https://picsum.photos/40/40?random=20', action: 'You have a bug that needs...', time: 'Just now' },
+  { id: '2', user: 'Release', avatar: 'https://picsum.photos/40/40?random=25', action: 'Released a new version', time: '59 minutes ago' },
+  { id: '3', user: 'Bug', avatar: 'https://picsum.photos/40/40?random=26', action: 'Submitted a bug', time: '12 hours ago' },
+  { id: '4', user: 'Modified', avatar: 'https://picsum.photos/40/40?random=27', action: 'Modified A data in Page X', time: 'Today, 11:59 AM' },
+  { id: '5', user: 'Deleted', avatar: 'https://picsum.photos/40/40?random=28', action: 'Deleted a page in Project X', time: 'Feb 2, 2023' },
+];
+
+export const CONTACTS: Contact[] = [
+  { id: '1', name: 'Natali Craig', avatar: 'https://picsum.photos/40/40?random=30' },
+  { id: '2', name: 'Drew Cano', avatar: 'https://picsum.photos/40/40?random=31' },
+  { id: '3', name: 'Orlando Diggs', avatar: 'https://picsum.photos/40/40?random=32' },
+  { id: '4', name: 'Andi Lane', avatar: 'https://picsum.photos/40/40?random=33' },
+  { id: '5', name: 'Kate Morrison', avatar: 'https://picsum.photos/40/40?random=34' },
+  { id: '6', name: 'Koray Okumus', avatar: 'https://picsum.photos/40/40?random=35' },
+];
