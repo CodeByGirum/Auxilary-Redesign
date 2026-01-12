@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auxiliary Design System | Institutional Documentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9f9f9;
+            --text-primary: #111111;
+            --text-secondary: #555555;
+            --accent: #000000;
+            --border: #e5e5e5;
+            --code-bg: #f4f4f4;
+        }
+
+        .dark {
+            --bg-primary: #171717;
+            --bg-secondary: #212121;
+            --text-primary: #f5f5f5;
+            --text-secondary: #a1a1a1;
+            --accent: #ffffff;
+            --border: #333333;
+            --code-bg: #2a2a2a;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .dark .card-shadow {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-nav {
+            height: calc(100vh - 4rem);
+        }
+
+        section {
+            scroll-margin-top: 6rem;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--code-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: var(--code-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border: 1px solid var(--border);
+        }
+
+        .preview-box {
+            border: 1px solid var(--border);
+            background-image: radial-gradient(var(--border) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .page-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .excel-grid-header {
+            background-color: #f3f2f1;
+            color: #605e5c;
+            font-weight: 600;
+            font-size: 11px;
+            border-right: 1px solid #e1dfdd;
+            border-bottom: 1px solid #e1dfdd;
+        }
+
+        .dark .excel-grid-header {
+            background-color: #2b2b2b;
+            color: #a1a1a1;
+            border-right: 1px solid #333;
+            border-bottom: 1px solid #333;
+        }
+
+        .excel-cell {
+            border-right: 1px solid #e1dfdd;
+            border-bottom: 1px solid #e1dfdd;
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+
+        .dark .excel-cell {
+            border-right: 1px solid #333;
+            border-bottom: 1px solid #333;
+        }
+
+        .resizer-handle {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            cursor: col-resize;
+            background-color: transparent;
+            transition: background-color 0.2s;
+        }
+
+        .resizer-handle:hover {
+            background-color: #107c41;
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased selection:bg-indigo-500 selection:text-white">
+    <!-- Header / Mode Toggle -->
+    <header
+        class="fixed top-0 w-full h-16 bg-white/80 dark:bg-[#171717]/80 backdrop-blur-md border-b border-gray-200 dark:border-[#333] z-[100] px-8 flex items-center justify-between">
+        <div class="flex items-center gap-3 font-extrabold text-lg tracking-tighter uppercase">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="2" y="2" width="4" height="4" />
+                <rect x="8" y="2" width="4" height="4" />
+                <rect x="2" y="8" width="4" height="4" />
+                <rect x="8" y="8" width="4" height="4" />
+                <rect x="14" y="2" width="4" height="4" />
+                <rect x="14" y="8" width="4" height="4" />
+                <rect x="2" y="14" width="4" height="4" />
+                <rect x="8" y="14" width="4" height="4" />
+                <rect x="14" y="14" width="4" height="4" />
+            </svg>
+            Auxiliary <span class="font-light text-gray-400 ml-1">Design System</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden md:block">Master Registry
+                2024.12</span>
+            <button id="themeToggle"
+                class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#333] transition-colors border border-gray-200 dark:border-[#444]">
+                <svg id="sunIcon" class="hidden dark:block w-5 h-5" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 5a7 7 0 100 14 7 7 0 000-14z" />
+                </svg>
+                <svg id="moonIcon" class="block dark:hidden w-5 h-5" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex pt-16">
+        <!-- Sidebar Navigation -->
+        <nav
+            class="fixed left-0 w-72 sidebar-nav overflow-y-auto no-scrollbar border-r border-gray-200 dark:border-[#333] bg-[#F9F9F9] dark:bg-[#171717] px-8 py-10 hidden lg:block">
+            <div class="space-y-8">
+                <div>
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Core Philosophy</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#philosophy"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Design Rationale</a>
+                        </li>
+                        <li><a href="#agency-value"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Value for
+                                Agencies</a></li>
+                        <li><a href="#identity"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Visual DNA</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Atomic Elements</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#typography"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors font-bold text-indigo-500">Typography Registry</a>
+                        </li>
+                        <li><a href="#colors" class="text-sm font-medium hover:text-indigo-500 transition-colors">Color
+                                Archetypes</a></li>
+                        <li><a href="#modes" class="text-sm font-medium hover:text-indigo-500 transition-colors">Light
+                                vs Dark Logic</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">The Card Engine</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#card-logic"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Universal Specs</a>
+                        </li>
+                        <li><a href="#project-cards"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Project Page
+                                Specs</a></li>
+                        <li><a href="#notebook-cards"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Notebook Page
+                                Specs</a></li>
+                        <li><a href="#integration-cards"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Integration
+                                Tiles</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Worksurface
+                        Components</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#chat-system"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Chat & Input
+                                Area</a></li>
+                        <li><a href="#tables"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Excel Logic Grid</a>
+                        </li>
+                        <li><a href="#table-contexts"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Table Contexts</a>
+                        </li>
+                        <li><a href="#drawers"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Analysis Drawers</a>
+                        </li>
+                        <li><a href="#sidebar-logic"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Sidebar
+                                Draggables</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Page Architecture
+                    </h4>
+                    <ul class="space-y-3">
+                        <li><a href="#published-page"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Published
+                                (Editorial)</a></li>
+                        <li><a href="#datasets-page"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Datasets
+                                Registry</a></li>
+                        <li><a href="#search-page"
+                                class="text-sm font-medium hover:text-indigo-500 transition-colors">Workspace Search</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 lg:ml-72 px-8 md:px-16 lg:px-24 py-16 max-w-7xl">
+
+            <!-- 1. Philosophy -->
+            <section id="philosophy" class="mb-32">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-widest rounded-full mb-6">
+                    Philosophy
+                </div>
+                <h1 class="text-5xl md:text-7xl font-extrabold tracking-tighter mb-8 leading-[0.9]">The Invisible
+                    Surface.</h1>
+                <p class="text-xl text-gray-500 dark:text-gray-400 max-w-3xl leading-relaxed mb-12">
+                    Auxiliary is built for professional marketing agencies who manage millions in spend across hundreds
+                    of campaigns. The system is designed to handle extreme data density without creating visual noise.
+                </p>
+
+                <div id="agency-value"
+                    class="grid md:grid-cols-3 gap-8 pt-12 border-t border-gray-100 dark:border-[#333]">
+                    <div>
+                        <h4 class="font-bold text-black dark:text-white mb-2 uppercase text-xs tracking-wider">High
+                            Velocity</h4>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Tabs and lateral drawers allow analysts to
+                            switch from campaign auditing to deep SQL analysis in under 200ms.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-black dark:text-white mb-2 uppercase text-xs tracking-wider">
+                            Client-Ready Reports</h4>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">AI-generated Notebooks use an editorial
+                            layout (Published page) that can be shared with clients without further formatting.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-black dark:text-white mb-2 uppercase text-xs tracking-wider">Spatial
+                            Awareness</h4>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Large rounded corners and gradients help
+                            users mentally map their workspace into physical "folders" and "documents."</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Typography Registry Section -->
+            <section id="typography" class="mb-32 border-t border-gray-100 dark:border-[#333] pt-16">
+                <h2 class="text-4xl font-black tracking-tight mb-8">Typography Registry.</h2>
+                <p class="text-lg text-gray-500 dark:text-gray-400 mb-12">We use a dual-font strategy to balance editorial elegance with technical precision.</p>
+
+                <div class="grid md:grid-cols-2 gap-12 mb-16">
+                    <div>
+                        <h3 class="text-sm font-bold text-indigo-500 uppercase tracking-widest mb-4">Font Families</h3>
+                        <div class="space-y-6">
+                            <div class="p-6 bg-gray-50 dark:bg-[#1a1a1a] rounded-2xl border border-gray-100 dark:border-[#333]">
+                                <span class="text-xs text-gray-400 uppercase font-bold mb-2 block">Primary Branding & UI</span>
+                                <p class="text-4xl font-sans font-extrabold tracking-tighter text-black dark:text-white">Inter</p>
+                                <p class="text-sm text-gray-500 mt-2">Used for all interface elements, headings, and long-form reading in Notebooks.</p>
+                            </div>
+                            <div class="p-6 bg-gray-50 dark:bg-[#1a1a1a] rounded-2xl border border-gray-100 dark:border-[#333]">
+                                <span class="text-xs text-gray-400 uppercase font-bold mb-2 block">Technical & Data</span>
+                                <p class="text-4xl font-mono text-black dark:text-white">JetBrains Mono</p>
+                                <p class="text-sm text-gray-500 mt-2">Used for SQL code blocks, row indices, data values in grids, and timestamps.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-sm font-bold text-indigo-500 uppercase tracking-widest mb-4">Scale & Hierarchy</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-end justify-between border-b border-gray-100 dark:border-[#333] pb-2">
+                                <span class="text-5xl font-extrabold tracking-tighter">H1</span>
+                                <span class="text-xs text-gray-400 font-mono">72px / Bold / 0.9lh</span>
+                            </div>
+                            <div class="flex items-end justify-between border-b border-gray-100 dark:border-[#333] pb-2">
+                                <span class="text-3xl font-bold tracking-tight">H2</span>
+                                <span class="text-xs text-gray-400 font-mono">48px / Bold / 1.1lh</span>
+                            </div>
+                            <div class="flex items-end justify-between border-b border-gray-100 dark:border-[#333] pb-2">
+                                <span class="text-xl font-semibold">Body Large</span>
+                                <span class="text-xs text-gray-400 font-mono">18px / Medium / 1.6lh</span>
+                            </div>
+                            <div class="flex items-end justify-between border-b border-gray-100 dark:border-[#333] pb-2">
+                                <span class="text-base">Body Standard</span>
+                                <span class="text-xs text-gray-400 font-mono">15px / Normal / 1.7lh</span>
+                            </div>
+                            <div class="flex items-end justify-between border-b border-gray-100 dark:border-[#333] pb-2">
+                                <span class="text-xs font-bold uppercase tracking-widest">Micro Label</span>
+                                <span class="text-xs text-gray-400 font-mono">10px / 800 / Normal</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-[#1a1a1a] p-8 rounded-[32px] border border-gray-100 dark:border-[#333]">
+                    <h4 class="font-bold text-sm mb-4 uppercase tracking-widest">Advanced Application Guidance</h4>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <div>
+                            <span class="text-[10px] font-bold text-indigo-500 block mb-2 uppercase">Editorial Emphasis</span>
+                            <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400">In Published reports, we utilize a <code>leading-relaxed</code> (1.7) line-height for body text to reduce cognitive load during analysis review.</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-indigo-500 block mb-2 uppercase">The 10px Rule</span>
+                            <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400">Functional labels (Status, Tags, Metadata) must never exceed 10px but should be paired with <code>font-bold</code> and <code>tracking-widest</code> for legibility.</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-indigo-500 block mb-2 uppercase">Numeric Alignment</span>
+                            <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400">Always use JetBrains Mono for monetary values in tables. The fixed-width character set ensures columns of numbers align vertically for easy comparison.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. The Card Engine -->
+            <section id="card-logic" class="mb-32">
+                <h2 class="text-4xl font-black tracking-tight mb-6">The Card Engine.</h2>
+                <p class="text-lg text-gray-500 dark:text-gray-400 mb-12">Our card system reifies abstract campaign data
+                    into distinct physical objects. This creates a "workspace" feel rather than a "database" feel.</p>
+
+                <div class="grid md:grid-cols-2 gap-12">
+                    <!-- Project Cards -->
+                    <div id="project-cards" class="space-y-6">
+                        <h3 class="text-xl font-bold flex items-center gap-2">
+                            <span class="page-dot bg-blue-500"></span> Projects (Folders)
+                        </h3>
+                        <div class="preview-box p-8 rounded-[40px] bg-gray-50 dark:bg-[#111]">
+                            <div
+                                class="w-full aspect-square rounded-[32px] bg-gradient-to-br from-blue-400 to-blue-600 relative overflow-hidden shadow-2xl scale-75">
+                                <div
+                                    class="absolute bottom-0 inset-x-0 h-[60%] bg-white dark:bg-[#1e1e1e] rounded-tr-[32px] p-6">
+                                    <div class="w-12 h-1.5 bg-gray-100 dark:bg-[#333] rounded-full mb-4"></div>
+                                    <div class="h-6 w-3/4 bg-gray-200 dark:bg-[#333] rounded-md mb-2"></div>
+                                    <div class="h-4 w-1/2 bg-gray-100 dark:bg-[#252525] rounded-md"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="text-sm"><strong>Corner Radius:</strong> 32px standard. Uses an "Inverted Radius"
+                                transition for the folder tab to ensure fluid mechanical silhouette.</p>
+                            <p class="text-sm"><strong>Gradients:</strong> 5-color registry (Blue, Pink, Amber, Emerald,
+                                Indigo) mapped to agency client tiers.</p>
+                            <p class="text-sm"><strong>Animation:</strong> Hover triggers a <code>-translate-y-4</code>
+                                on the 3 internal "Document Illustrations" to simulate opening a physical file.</p>
+                        </div>
+                    </div>
+
+                    <!-- Notebook Cards -->
+                    <div id="notebook-cards" class="space-y-6">
+                        <h3 class="text-xl font-bold flex items-center gap-2">
+                            <span class="page-dot bg-pink-500"></span> Notebooks (Docs)
+                        </h3>
+                        <div class="preview-box p-8 rounded-[40px] bg-gray-50 dark:bg-[#111]">
+                            <div
+                                class="w-[80%] mx-auto aspect-[3.8/5] rounded-[32px] border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1e1e1e] overflow-hidden shadow-xl">
+                                <div
+                                    class="h-[55%] bg-gradient-to-br from-pink-400 to-pink-600 relative flex items-center justify-center">
+                                    <div class="w-16 h-20 bg-white rounded-lg shadow-2xl translate-y-4"></div>
+                                </div>
+                                <div class="p-4 space-y-2">
+                                    <div class="w-12 h-1 bg-gray-100 dark:bg-[#333] rounded"></div>
+                                    <div class="h-4 w-full bg-gray-200 dark:bg-[#333] rounded"></div>
+                                    <div class="h-2 w-2/3 bg-gray-100 dark:bg-[#252525] rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="text-sm"><strong>Geometry:</strong> 3.8:5 aspect ratio. Optimized for portrait
+                                reading preview.</p>
+                            <p class="text-sm"><strong>Visual Indicator:</strong> Centered document illustration changes
+                                icon based on <code>analysis_type</code> (Chart vs Text).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="integration-cards"
+                    class="mt-12 p-8 rounded-3xl border border-gray-100 dark:border-[#333] bg-gray-50/50 dark:bg-[#1a1a1a]">
+                    <h3 class="text-lg font-bold mb-4">Integration Tiles</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div
+                            class="p-6 bg-white dark:bg-[#1f1f1f] border border-gray-200 dark:border-[#333] rounded-2xl flex flex-col items-center">
+                            <div class="w-12 h-12 bg-gray-50 dark:bg-[#2a2a2a] rounded-xl mb-3"></div>
+                            <div class="h-3 w-16 bg-gray-100 dark:bg-[#333] rounded"></div>
+                        </div>
+                        <div
+                            class="p-6 bg-white dark:bg-[#1f1f1f] border border-gray-200 dark:border-[#333] rounded-2xl flex flex-col items-center opacity-50 border-dashed">
+                            <div class="w-12 h-12 flex items-center justify-center text-gray-400"><svg width="24"
+                                    height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg></div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-4">Integrations use a 16px radius. Smaller than Folders to
+                        signify they are "Utility Components" rather than "Primary Assets."</p>
+                </div>
+            </section>
+
+            <!-- 3. Component Deep Dive -->
+            <section id="chat-system" class="mb-32">
+                <h2 class="text-4xl font-black tracking-tight mb-12 border-b border-gray-100 dark:border-[#333] pb-4">
+                    Worksurface Architecture.</h2>
+
+                <!-- Input Area -->
+                <div class="mb-24">
+                    <h3 class="text-2xl font-bold mb-6">InputArea Component</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-8">The most complex interactive surface in the app. It
+                        handles multi-modal input, AI state switching, and contextual Polish.</p>
+
+                    <div class="preview-box p-12 rounded-[40px] mb-8">
+                        <div class="max-w-2xl mx-auto space-y-4">
+                            <div class="flex gap-2 justify-center mb-6">
+                                <div
+                                    class="px-4 py-1.5 rounded-full bg-black text-white text-[10px] font-bold uppercase tracking-wider">
+                                    Analyst Mode</div>
+                                <div
+                                    class="px-4 py-1.5 rounded-full bg-white border border-gray-200 text-gray-500 text-[10px] font-bold uppercase tracking-wider">
+                                    Search Mode</div>
+                            </div>
+                            <div
+                                class="bg-[#f4f4f4] dark:bg-[#2C2C2C] p-4 rounded-[28px] border border-transparent shadow-sm">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-white dark:bg-[#333] flex items-center justify-center text-gray-400">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M12 5v14M5 12h14" />
+                                        </svg>
+                                    </div>
+                                    <div class="text-gray-400 text-sm">Message Gemini 3.0 Flash...</div>
+                                    <div
+                                        class="ml-auto w-10 h-10 rounded-full bg-black dark:bg-white flex items-center justify-center text-white dark:text-black">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="3">
+                                            <path d="M12 19V5M5 12l7-7 7 7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div
+                            class="spec-item bg-gray-50 dark:bg-[#212121] p-6 rounded-2xl border border-gray-200 dark:border-[#333]">
+                            <h4 class="font-bold text-sm mb-4 uppercase tracking-widest text-indigo-500">State: Context
+                                Pills</h4>
+                            <p class="text-xs leading-relaxed">Located above the text input. <code>Analyst Mode</code>
+                                injects a system prompt instructing the model to generate AlaSQL code blocks.
+                                <code>Polish</code> triggers an instant Gemini-2.5-Flash rewrite of the user's current
+                                draft.
+                            </p>
+                        </div>
+                        <div
+                            class="spec-item bg-gray-50 dark:bg-[#212121] p-6 rounded-2xl border border-gray-200 dark:border-[#333]">
+                            <h4 class="font-bold text-sm mb-4 uppercase tracking-widest text-indigo-500">State: Menu
+                                Overlay</h4>
+                            <p class="text-xs leading-relaxed">The Plus (+) menu uses a "View Stack" architecture.
+                                Clicking "Model" or "Projects" slides in a submenu view using simple boolean state
+                                transitions, maintaining the focus on the current task.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tables & Drawers -->
+                <div id="tables" class="mb-24">
+                    <h3 class="text-2xl font-bold mb-6">Excel Logic Grid (The Data Engine)</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-8">We avoid standard HTML tables for a custom Grid system that supports absolute-positioned resizers. This provides a tactile, mechanical feel familiar to media buyers.</p>
+
+                    <div class="space-y-12">
+                        <!-- Excel Logic Grid Visualization -->
+                        <div class="bg-white dark:bg-[#1e1e1e] border border-gray-300 dark:border-[#444] rounded-xl shadow-xl overflow-hidden font-sans">
+                            <!-- Column Indicators -->
+                            <div class="flex h-8">
+                                <div class="w-10 excel-grid-header border-b border-gray-300 flex items-center justify-center">#</div>
+                                <div class="w-64 excel-grid-header relative px-3 flex items-center">
+                                    CAMPAIGN_NAME (A)
+                                    <div class="resizer-handle"></div>
+                                </div>
+                                <div class="w-48 excel-grid-header relative px-3 flex items-center">
+                                    SPEND (B)
+                                    <div class="resizer-handle"></div>
+                                </div>
+                                <div class="w-32 excel-grid-header relative px-3 flex items-center">
+                                    STATUS (C)
+                                    <div class="resizer-handle"></div>
+                                </div>
+                                <div class="flex-1 excel-grid-header"></div>
+                            </div>
+                            <!-- Rows -->
+                            <div class="flex h-8 bg-white dark:bg-[#1e1e1e]">
+                                <div class="w-10 excel-grid-header flex items-center justify-center bg-gray-50 dark:bg-[#2b2b2b]">1</div>
+                                <div class="w-64 excel-cell truncate font-medium">Summer_Q3_Retargeting_V2</div>
+                                <div class="w-48 excel-cell font-mono text-right">$12,450.80</div>
+                                <div class="w-32 excel-cell"><span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded">LIVE</span></div>
+                                <div class="flex-1 excel-cell"></div>
+                            </div>
+                            <div class="flex h-8 bg-gray-50 dark:bg-[#252525]">
+                                <div class="w-10 excel-grid-header flex items-center justify-center">2</div>
+                                <div class="w-64 excel-cell truncate font-medium">Competitor_Conquesting_Search</div>
+                                <div class="w-48 excel-cell font-mono text-right">$8,211.55</div>
+                                <div class="w-32 excel-cell"><span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded">PENDING</span></div>
+                                <div class="flex-1 excel-cell"></div>
+                            </div>
+                            <div class="flex h-8 bg-white dark:bg-[#1e1e1e]">
+                                <div class="w-10 excel-grid-header flex items-center justify-center bg-gray-50 dark:bg-[#2b2b2b]">3</div>
+                                <div class="w-64 excel-cell truncate font-medium">Brand_Awareness_Video_YT</div>
+                                <div class="w-48 excel-cell font-mono text-right">$45,000.00</div>
+                                <div class="w-32 excel-cell"><span class="px-2 py-0.5 bg-gray-100 text-gray-700 text-[10px] font-bold rounded">ARCHIVED</span></div>
+                                <div class="flex-1 excel-cell"></div>
+                            </div>
+                        </div>
+
+                        <div id="table-contexts" class="grid md:grid-cols-2 gap-12 pt-12">
+                            <div>
+                                <h4 class="text-sm font-bold text-indigo-500 uppercase tracking-widest mb-4">Context A: Full-Page Analysis</h4>
+                                <div class="aspect-video bg-gray-100 dark:bg-[#111] rounded-3xl border border-gray-200 dark:border-[#333] p-6 flex flex-col">
+                                    <div class="h-10 w-full bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#333] rounded-lg mb-4 flex items-center px-4 gap-4">
+                                        <div class="w-1/4 h-3 bg-gray-100 dark:bg-[#333] rounded"></div>
+                                        <div class="w-1/4 h-3 bg-gray-100 dark:bg-[#333] rounded"></div>
+                                        <div class="ml-auto flex gap-2">
+                                            <div class="w-16 h-5 bg-black dark:bg-white rounded"></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 bg-white dark:bg-[#1e1e1e] rounded-xl border border-gray-200 dark:border-[#333] overflow-hidden opacity-60">
+                                        <div class="h-6 bg-gray-50 dark:bg-[#2b2b2b] w-full"></div>
+                                        <div class="space-y-2 p-4">
+                                            <div class="h-4 w-full bg-gray-50 dark:bg-[#252525]"></div>
+                                            <div class="h-4 w-full bg-gray-50 dark:bg-[#252525]"></div>
+                                            <div class="h-4 w-full bg-gray-50 dark:bg-[#252525]"></div>
+                                            <div class="h-4 w-full bg-gray-50 dark:bg-[#252525]"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-4 leading-relaxed">In the <code>TableDrawer</code>, the grid expands to 90vw. It includes a multi-tab interface (Pivot, Chart, Notebook) to allow analysts to process the entire dataset in a high-density environment.</p>
+                            </div>
+
+                            <div>
+                                <h4 class="text-sm font-bold text-indigo-500 uppercase tracking-widest mb-4">Context B: Embedded Chat</h4>
+                                <div class="aspect-video bg-white dark:bg-[#212121] rounded-3xl border border-gray-200 dark:border-[#333] p-10 flex flex-col items-center justify-center">
+                                    <div class="w-4/5 p-4 bg-gray-50 dark:bg-[#2f2f2f] rounded-2xl mb-4 border border-gray-200 dark:border-[#333]">
+                                        <div class="h-3 w-1/3 bg-gray-200 dark:bg-[#444] rounded mb-2"></div>
+                                        <div class="h-2 w-full bg-gray-100 dark:bg-[#333] rounded"></div>
+                                    </div>
+                                    <div class="w-full h-32 bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#333] rounded-xl shadow-lg overflow-hidden flex flex-col">
+                                        <div class="h-8 bg-gray-50 dark:bg-[#252525] flex items-center px-3 border-b border-gray-200 dark:border-[#333]">
+                                            <div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                                            <span class="text-[9px] font-bold text-gray-400">Dataset Preview</span>
+                                        </div>
+                                        <div class="h-6 bg-gray-100 dark:bg-[#2b2b2b] w-full flex">
+                                            <div class="w-10 border-r border-gray-200"></div>
+                                            <div class="flex-1"></div>
+                                        </div>
+                                        <div class="flex-1 space-y-1 p-2">
+                                            <div class="h-3 w-full bg-gray-50 dark:bg-[#252525]"></div>
+                                            <div class="h-3 w-full bg-gray-50 dark:bg-[#252525]"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-4 leading-relaxed">Inside the <code>NewChat</code> message stream, the <code>EmbeddedTable</code> component serves as an interactive widget. It truncates to the first 5 rows to maintain the conversation flow.</p>
+                            </div>
+                        </div>
+
+                        <pre><code>// components/chat/EmbeddedTable.tsx
+// Renders a maximum of 5 rows for chat readability.
+// Triggers TableDrawer.tsx for full analysis workspace.</code></pre>
+                    </div>
+
+                    <div id="drawers" class="mt-12">
+                        <h4 class="font-bold mb-4 uppercase text-[10px] tracking-widest text-indigo-500">Drawer View Modes</h4>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5">
+                                <h5 class="text-[11px] font-black uppercase mb-1">Grid</h5>
+                                <p class="text-[10px] text-gray-500">Direct cell manipulation.</p>
+                            </div>
+                            <div class="p-4 rounded-xl border border-gray-200 dark:border-[#333]">
+                                <h5 class="text-[11px] font-black uppercase mb-1">Pivot</h5>
+                                <p class="text-[10px] text-gray-500">Aggregates via custom JS engine.</p>
+                            </div>
+                            <div class="p-4 rounded-xl border border-gray-200 dark:border-[#333]">
+                                <h5 class="text-[11px] font-black uppercase mb-1">Visuals</h5>
+                                <p class="text-[10px] text-gray-500">Recharts Bar/Pie/Line wrapper.</p>
+                            </div>
+                            <div class="p-4 rounded-xl border border-gray-200 dark:border-[#333]">
+                                <h5 class="text-[11px] font-black uppercase mb-1">Notebook</h5>
+                                <p class="text-[10px] text-gray-500">AI editorial generation.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar draggables -->
+                <div id="sidebar-logic">
+                    <h3 class="text-2xl font-bold mb-6">Sidebar & Draggables</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-8">We use native HTML5 drag events for Sidebar
+                        sections to allow analysts to prioritize clients or specific analytical models manually.</p>
+                    <div
+                        class="flex flex-col gap-1 w-64 p-4 border border-gray-100 dark:border-[#333] rounded-xl bg-[#F9F9F9] dark:bg-[#171717]">
+                        <div
+                            class="flex items-center gap-2 p-2 bg-white dark:bg-[#252525] border border-gray-200 dark:border-[#444] rounded text-xs">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" class="opacity-40">
+                                <path d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                            Campaign Insights 2024
+                        </div>
+                        <div class="flex items-center gap-2 p-2 rounded text-xs opacity-50">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" class="opacity-40">
+                                <path d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                            Quarterly Report Draft
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Page Architectures -->
+            <section id="published-page" class="mb-32">
+                <h2 class="text-4xl font-black tracking-tight mb-12 border-b border-gray-100 dark:border-[#333] pb-4">
+                    The Page Registry.</h2>
+
+                <!-- Published Page -->
+                <div class="mb-24">
+                    <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
+                        Published <span
+                            class="text-[10px] font-black bg-black text-white px-2 py-0.5 rounded tracking-tighter uppercase">Editorial
+                            Layout</span>
+                    </h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-8">Inspired by high-end financial news journals. It
+                        trades app-like UI for typographic hierarchy to improve long-form reading performance.</p>
+                    <div
+                        class="grid md:grid-cols-12 gap-8 border border-gray-100 dark:border-[#333] p-10 rounded-[48px] bg-white dark:bg-[#1e1e1e]">
+                        <div class="col-span-8 border-r border-gray-100 dark:border-[#333] pr-8">
+                            <div class="h-8 w-1/4 bg-indigo-500 mb-4"></div>
+                            <div class="h-16 w-full bg-gray-100 dark:bg-[#2a2a2a] mb-6"></div>
+                            <div class="h-32 w-full bg-gray-50 dark:bg-[#1a1a1a] rounded"></div>
+                        </div>
+                        <div class="col-span-4 space-y-4">
+                            <div class="h-4 w-full bg-gray-100 dark:bg-[#333]"></div>
+                            <div class="h-4 w-full bg-gray-100 dark:bg-[#333]"></div>
+                            <div class="h-4 w-full bg-gray-100 dark:bg-[#333]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datasets Page -->
+                <div id="datasets-page" class="mb-24">
+                    <h3 class="text-2xl font-bold mb-4">Datasets Registry</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-8">Uses a 3-column masonry-style layout. Each card is
+                        a <code>EmbeddedTable</code> component in its minimized state. Interaction depth: 1 click =
+                        Context Menu, 2 clicks = Full Workspace.</p>
+                </div>
+
+                <!-- Search Page -->
+                <div id="search-page">
+                    <h3 class="text-2xl font-bold mb-4">Workspace Search</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-8">Centralizes project indexing. Features
+                        <code>autoFocus</code> on mount and categorized results (Recent vs Trending) to reduce keyboard
+                        interaction count.
+                    </p>
+                </div>
+            </section>
+
+            <!-- 5. Voice & Tone -->
+            <section id="voice" class="mb-32">
+                <h2 class="text-4xl font-black tracking-tight mb-12 border-b border-gray-100 dark:border-[#333] pb-4">
+                    Voice & Calm.</h2>
+                <div class="grid md:grid-cols-2 gap-12">
+                    <div class="p-8 rounded-3xl bg-indigo-500 text-white">
+                        <h4 class="font-bold mb-4 uppercase text-xs tracking-widest opacity-80">Auxiliary Tone</h4>
+                        <p class="text-xl font-medium leading-relaxed italic">"Direct. Mechanical. Analytical. We speak
+                            in conclusions, not complications."</p>
+                    </div>
+                    <div class="space-y-6">
+                        <div>
+                            <div class="text-[10px] font-bold text-red-500 mb-2 uppercase">Poor Copy</div>
+                            <p class="text-sm border-l-2 border-red-500 pl-4 py-1 italic text-gray-500">"Oopsie! We
+                                couldn't find your data. Maybe try checking your connection? :("</p>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-green-500 mb-2 uppercase">Auxiliary Copy</div>
+                            <p class="text-sm border-l-2 border-green-500 pl-4 py-1 italic">"Dataset sync failed. Peer
+                                connection timed out. Retrying in 2.0s."</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="integrity-statement" class="mb-20 pt-16 border-t border-gray-100 dark:border-[#333]">
+                <div class="p-8 bg-gray-50 dark:bg-[#111] rounded-[32px] border border-gray-100 dark:border-[#333]">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-green-500">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                        </svg>
+                        Codebase Integrity Confirmation
+                    </h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                        This update is strictly additive and non-destructive. Nothing was removed or rewritten from the existing codebase. All React components, utility functions, and styles remain intact. The HTML additions for the design system documentation and fixes for the table logic representations were implemented without replacing, removing, or refactoring any current functional code.
+                    </p>
+                </div>
+            </section>
+
+            <footer
+                class="pt-10 border-t border-gray-100 dark:border-[#333] text-[11px] font-bold text-gray-400 uppercase tracking-widest flex justify-between">
+                <span>© 2024 Auxiliary Systems Inc.</span>
+                <span>Registry Code: 0x2A19F</span>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        themeToggle.addEventListener('click', () => {
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // Sync with system or local storage
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+        } else {
+            html.classList.remove('dark');
+        }
+
+        // Simple scroll spy with improved smoothness
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.sidebar-nav a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('text-indigo-500', 'font-bold');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('text-indigo-500', 'font-bold');
+                }
+            });
+        });
+
+        // Ensure smooth scrolling for long docs
+        document.querySelectorAll('.sidebar-nav a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

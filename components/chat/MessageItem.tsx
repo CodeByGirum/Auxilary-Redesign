@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { Check, Copy, RefreshCw, ThumbsUp, ThumbsDown, Globe, FileText } from 'lucide-react';
 import { Message, TableData } from '../../types/chat';
@@ -12,7 +11,8 @@ interface MessageItemProps {
   msg: Message;
   onRerun: (id: string) => void;
   onFeedback: (id: string, type: 'like' | 'dislike') => void;
-  onExpandTable?: (data: TableData, fileName: string) => void;
+  // Updated signature to support optional visualHint parameter
+  onExpandTable?: (data: TableData, fileName: string, visualHint?: string) => void;
 }
 
 export const MessageItem: React.FC<MessageItemProps> = ({ msg, onRerun, onFeedback, onExpandTable }) => {

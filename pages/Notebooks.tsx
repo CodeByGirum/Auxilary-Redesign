@@ -1,19 +1,55 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, Plus, MoreHorizontal, FileText, PieChart, BarChart3, LineChart, Sparkles } from 'lucide-react';
+import { Search, Plus, MoreHorizontal, FileText, PieChart, BarChart3, LineChart, Sparkles } from 'lucide-react';
+import { Notebook } from '../types';
+import { CreateNotebookModal } from '../components/CreateNotebookModal';
 
-// --- Types ---
+// --- Color Palette Configuration ---
+const GRADIENT_PALETTE = [
+  { class: 'bg-gradient-to-br from-[#f472b6] to-[#db2777]', type: 'warm' }, // Pink
+  { class: 'bg-gradient-to-br from-[#f87171] to-[#dc2626]', type: 'warm' }, // Red
+  { class: 'bg-gradient-to-br from-[#fbbf24] to-[#d97706]', type: 'warm' }, // Amber
+  { class: 'bg-gradient-to-br from-[#fb923c] to-[#ea580c]', type: 'warm' }, // Orange
+  
+  { class: 'bg-gradient-to-br from-[#60a5fa] to-[#2563eb]', type: 'cool' }, // Blue
+  { class: 'bg-gradient-to-br from-[#22d3ee] to-[#0891b2]', type: 'cool' }, // Cyan
+  { class: 'bg-gradient-to-br from-[#34d399] to-[#059669]', type: 'cool' }, // Emerald
+  { class: 'bg-gradient-to-br from-[#2dd4bf] to-[#0d9488]', type: 'cool' }, // Teal
+  
+  { class: 'bg-gradient-to-br from-[#818cf8] to-[#4f46e5]', type: 'purple' }, // Indigo
+  { class: 'bg-gradient-to-br from-[#a78bfa] to-[#7c3aed]', type: 'purple' }, // Violet
+  { class: 'bg-gradient-to-br from-[#e879f9] to-[#c026d3]', type: 'purple' }, // Fuchsia
+];
 
-interface Notebook {
-  id: string;
-  title: string;
-  description: string;
-  author: string;
-  date: string;
-  category: string;
-  gradient: string;
-  icon?: any;
-}
+// How many recent cards we must NOT repeat
+const RECENT_WINDOW = 6;
+
+// Pick a gradient that is NOT in the recent window and ideally not the same type as last
+const pickNextGradient = (recentGradients: string[]) => {
+  const lastGradient = recentGradients[0];
+  const lastObj = GRADIENT_PALETTE.find(g => g.class === lastGradient);
+
+  // 1) hard block: do not reuse any of the last N gradients
+  const blocked = new Set(recentGradients.slice(0, RECENT_WINDOW));
+
+  let candidates = GRADIENT_PALETTE.filter(g => !blocked.has(g.class));
+
+  // 2) soft block: prefer different "type" than the last one
+  if (lastObj) {
+    const diffType = candidates.filter(g => g.type !== lastObj.type);
+    if (diffType.length > 0) candidates = diffType;
+  }
+
+  // 3) fallback: if palette is smaller than window, allow reuse but avoid exact last
+  if (candidates.length === 0) {
+    candidates = GRADIENT_PALETTE.filter(g => g.class !== lastGradient);
+  }
+
+  // Final fallback if everything failed (shouldn't happen with decent palette size)
+  if (candidates.length === 0) return GRADIENT_PALETTE[0].class;
+
+  return candidates[Math.floor(Math.random() * candidates.length)].class;
+};
 
 // --- Mock Data ---
 
@@ -26,7 +62,9 @@ const MOCK_NOTEBOOKS: Notebook[] = [
     date: 'Oct 24, 2023',
     category: 'Analysis',
     gradient: 'bg-gradient-to-br from-[#f472b6] to-[#db2777]', // Pink
-    icon: PieChart
+    icon: PieChart,
+    environment: 'python',
+    compute: 'cpu-std'
   },
   { 
     id: '2', 
@@ -36,7 +74,9 @@ const MOCK_NOTEBOOKS: Notebook[] = [
     date: 'Nov 10, 2023',
     category: 'Finance',
     gradient: 'bg-gradient-to-br from-[#60a5fa] to-[#2563eb]', // Blue
-    icon: BarChart3
+    icon: BarChart3,
+    environment: 'r',
+    compute: 'cpu-pro'
   },
   { 
     id: '3', 
@@ -46,7 +86,9 @@ const MOCK_NOTEBOOKS: Notebook[] = [
     date: 'Dec 05, 2023',
     category: 'Research',
     gradient: 'bg-gradient-to-br from-[#fbbf24] to-[#d97706]', // Amber
-    icon: LineChart
+    icon: LineChart,
+    environment: 'python',
+    compute: 'gpu-t4'
   },
   { 
     id: '4', 
@@ -56,7 +98,9 @@ const MOCK_NOTEBOOKS: Notebook[] = [
     date: 'Jan 12, 2024',
     category: 'Education',
     gradient: 'bg-gradient-to-br from-[#818cf8] to-[#4f46e5]', // Indigo
-    icon: Sparkles
+    icon: Sparkles,
+    environment: 'python',
+    compute: 'gpu-t4'
   },
   { 
     id: '5', 
@@ -66,7 +110,9 @@ const MOCK_NOTEBOOKS: Notebook[] = [
     date: 'Feb 02, 2024',
     category: 'Strategy',
     gradient: 'bg-gradient-to-br from-[#34d399] to-[#059669]', // Emerald
-    icon: FileText
+    icon: FileText,
+    environment: 'sql',
+    compute: 'cpu-std'
   },
   { 
     id: '6', 
@@ -76,7 +122,9 @@ const MOCK_NOTEBOOKS: Notebook[] = [
     date: 'Feb 15, 2024',
     category: 'Marketing',
     gradient: 'bg-gradient-to-br from-[#f87171] to-[#dc2626]', // Red
-    icon: BarChart3
+    icon: BarChart3,
+    environment: 'python',
+    compute: 'cpu-std'
   },
 ];
 
@@ -107,12 +155,15 @@ const DocumentIllustration = ({ className }: { className?: string }) => (
   </div>
 );
 
-const NotebookCard: React.FC<{ notebook: Notebook }> = ({ notebook }) => {
+const NotebookCard: React.FC<{ notebook: Notebook; onClick: (nb: Notebook) => void }> = ({ notebook, onClick }) => {
   return (
-    <div className="group relative w-full aspect-[3.8/5] rounded-[32px] overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-1 select-none bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#333]">
+    <div 
+        onClick={() => onClick(notebook)}
+        className="group relative w-full aspect-[3.8/5] rounded-[32px] overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-1 select-none bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#333]"
+    >
       
       {/* 1. Gradient Header */}
-      <div className={`h-[55%] ${notebook.gradient} relative overflow-hidden`}>
+      <div className={`h-[55%] ${notebook.gradient} relative overflow-hidden transition-colors duration-500`}>
          {/* Subtle noise/pattern overlay could go here */}
          <div className="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors" />
          
@@ -134,7 +185,10 @@ const NotebookCard: React.FC<{ notebook: Notebook }> = ({ notebook }) => {
                     {notebook.date}
                 </span>
             </div>
-            <button className="text-gray-400 hover:text-black dark:hover:text-white transition-colors p-1 -mr-2 -mt-1 rounded-full hover:bg-gray-100 dark:hover:bg-[#333]">
+            <button 
+                onClick={(e) => { e.stopPropagation(); /* Handle Menu */ }}
+                className="text-gray-400 hover:text-black dark:hover:text-white transition-colors p-1 -mr-2 -mt-1 rounded-full hover:bg-gray-100 dark:hover:bg-[#333]"
+            >
                <MoreHorizontal size={18} />
             </button>
          </div>
@@ -165,13 +219,33 @@ const NotebookCard: React.FC<{ notebook: Notebook }> = ({ notebook }) => {
   );
 };
 
-export const Notebooks = () => {
+interface NotebooksProps {
+    onOpenNotebook?: (notebook: Notebook) => void;
+}
+
+export const Notebooks: React.FC<NotebooksProps> = ({ onOpenNotebook }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [notebooks, setNotebooks] = useState<Notebook[]>(MOCK_NOTEBOOKS);
   
-  const filteredNotebooks = MOCK_NOTEBOOKS.filter(nb => 
+  const filteredNotebooks = notebooks.filter(nb => 
     nb.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     nb.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleCreateNew = () => {
+      setIsCreateModalOpen(true);
+  };
+
+  const handleModalCreate = (newNotebook: Notebook) => {
+      // Logic to assign distinct, colorful gradient
+      const recentGradients = notebooks.map(n => n.gradient).filter(Boolean) as string[];
+      const assignedGradient = pickNextGradient(recentGradients);
+      const notebookWithGradient = { ...newNotebook, gradient: assignedGradient };
+      
+      setNotebooks([notebookWithGradient, ...notebooks]);
+      setIsCreateModalOpen(false);
+  };
 
   return (
     <div className="min-h-full bg-white dark:bg-[#212121] transition-colors duration-300">
@@ -201,7 +275,10 @@ export const Notebooks = () => {
                     </div>
 
                     {/* New Notebook Button */}
-                    <button className="flex items-center justify-center gap-2 pl-4 pr-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium text-sm hover:opacity-90 active:scale-95 transition-all shadow-lg hover:shadow-xl">
+                    <button 
+                        onClick={handleCreateNew}
+                        className="flex items-center justify-center gap-2 pl-4 pr-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium text-sm hover:opacity-90 active:scale-95 transition-all shadow-lg hover:shadow-xl"
+                    >
                         <Plus size={18} />
                         <span>New Notebook</span>
                     </button>
@@ -211,17 +288,24 @@ export const Notebooks = () => {
             {/* Grid */}
             {filteredNotebooks.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                    {filteredNotebooks.map((nb) => (
-                        <NotebookCard key={nb.id} notebook={nb} />
-                    ))}
-                    
-                    {/* Add New Placeholder */}
-                    <div className="group relative w-full aspect-[3.8/5] rounded-[32px] border-2 border-dashed border-gray-200 dark:border-[#333] flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+                    {/* Add New Placeholder - Always First */}
+                    <div 
+                        onClick={handleCreateNew}
+                        className="group relative w-full aspect-[3.8/5] rounded-[32px] border-2 border-dashed border-gray-200 dark:border-[#333] flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
+                    >
                         <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#333] flex items-center justify-center text-gray-400 group-hover:text-black dark:group-hover:text-white transition-colors mb-4">
                             <Plus size={32} strokeWidth={1.5} />
                         </div>
                         <p className="font-medium text-gray-500 dark:text-gray-400">Create New Notebook</p>
                     </div>
+
+                    {filteredNotebooks.map((nb) => (
+                        <NotebookCard 
+                            key={nb.id} 
+                            notebook={nb} 
+                            onClick={(n) => onOpenNotebook && onOpenNotebook(n)}
+                        />
+                    ))}
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-gray-400">
@@ -233,6 +317,12 @@ export const Notebooks = () => {
                 </div>
             )}
         </div>
+
+        <CreateNotebookModal 
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            onCreate={handleModalCreate}
+        />
     </div>
   );
 };

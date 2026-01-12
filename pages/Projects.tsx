@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { MOCK_PROJECTS } from '../constants';
 import { Project } from '../types';
 import { Plus, Search, MoreHorizontal, File as FileIcon, Filter } from 'lucide-react';
+import { CreateProjectModal } from '../components/CreateProjectModal';
 
 // Visual component for the "Paper/Document" inside the folder
 const DocumentIllustration = ({ className, style, delay = 0 }: { className?: string; style?: React.CSSProperties; delay?: number }) => (
@@ -38,10 +38,10 @@ const FolderCard: React.FC<{ project: Project; index: number }> = ({ project, in
     : project.totalTasks;
 
   return (
-    <div className="group relative w-full aspect-[4/4.5] md:aspect-square rounded-[32px] overflow-hidden transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-1 cursor-pointer select-none">
+    <div className="group relative w-full aspect-[4/4.5] md:aspect-square rounded-[32px] bg-white dark:bg-[#1e1e1e] overflow-hidden transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-1 cursor-pointer select-none">
       
-      {/* 1. Background Gradient Layer */}
-      <div className={`absolute inset-0 ${bgGradient} transition-opacity duration-500`}>
+      {/* 1. Background Gradient Layer - Height limited to 70% to prevent bleed at bottom corners */}
+      <div className={`absolute top-0 left-0 right-0 h-[70%] ${bgGradient} transition-opacity duration-500`}>
         {/* Optional: Add subtle noise or pattern here */}
         <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-20 transition-opacity" />
       </div>
@@ -69,17 +69,17 @@ const FolderCard: React.FC<{ project: Project; index: number }> = ({ project, in
       <div className="absolute bottom-0 left-0 right-0 h-[55%] z-10">
         
         {/* The Tab Part */}
-        <div className="absolute bottom-full left-0 w-[50%] h-[40px] bg-white dark:bg-[#1e1e1e] rounded-t-2xl transition-colors duration-300">
+        <div className="absolute bottom-[calc(100%-1px)] left-0 w-[50%] h-[40px] bg-white dark:bg-[#1e1e1e] rounded-t-2xl transition-colors duration-300">
             {/* Content on Tab (if needed) */}
         </div>
 
         {/* The "Inverted Radius" Connector (Smooth curve between tab and body) */}
         <div 
-            className="absolute left-[50%] bottom-full w-8 h-8 bg-transparent rounded-bl-2xl shadow-[-16px_16px_0_0_#ffffff] dark:shadow-[-16px_16px_0_0_#1e1e1e] pointer-events-none transition-colors duration-300"
+            className="absolute left-[50%] bottom-[calc(100%-1px)] w-8 h-8 bg-transparent rounded-bl-2xl shadow-[-16px_16px_0_0_#ffffff] dark:shadow-[-16px_16px_0_0_#1e1e1e] pointer-events-none transition-colors duration-300"
         />
 
         {/* Main Body of Front Panel */}
-        <div className="absolute inset-0 bg-white dark:bg-[#1e1e1e] rounded-tr-[32px] p-6 flex flex-col justify-between transition-colors duration-300">
+        <div className="absolute inset-0 bg-white dark:bg-[#1e1e1e] rounded-tr-[32px] rounded-b-[32px] p-6 flex flex-col justify-between transition-colors duration-300">
             
             {/* Header Section inside Folder */}
             <div>
@@ -125,13 +125,6 @@ const FolderCard: React.FC<{ project: Project; index: number }> = ({ project, in
                         </div>
                     )}
                 </div>
-
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-black dark:bg-white flex items-center justify-center text-white dark:text-black">
-                         {project.icon ? React.createElement(project.icon, { size: 16 }) : <FileIcon size={16} />}
-                    </div>
-                    {/* Optional: Project platform icons could go here */}
-                </div>
             </div>
             
             {/* File Count Overlay (matches reference) */}
@@ -148,8 +141,10 @@ const FolderCard: React.FC<{ project: Project; index: number }> = ({ project, in
 export const Projects = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('All');
+  const [projects, setProjects] = useState(MOCK_PROJECTS);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const filteredProjects = MOCK_PROJECTS.filter(p => {
+  const filteredProjects = projects.filter(p => {
      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            p.description?.toLowerCase().includes(searchQuery.toLowerCase());
      const matchesStatus = filterStatus === 'All' || p.status === filterStatus;
@@ -157,6 +152,11 @@ export const Projects = () => {
   });
 
   const statuses = ['All', 'In Progress', 'Complete', 'Pending'];
+
+  const handleCreateProject = (newProject: Project) => {
+    setProjects([newProject, ...projects]);
+    setIsCreateModalOpen(false);
+  };
 
   return (
     <div className="min-h-full bg-white dark:bg-[#212121] transition-colors duration-300">
@@ -186,7 +186,10 @@ export const Projects = () => {
                     </div>
 
                     {/* New Project Button */}
-                    <button className="flex items-center justify-center gap-2 pl-4 pr-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium text-sm hover:opacity-90 active:scale-95 transition-all shadow-lg hover:shadow-xl">
+                    <button 
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="flex items-center justify-center gap-2 pl-4 pr-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium text-sm hover:opacity-90 active:scale-95 transition-all shadow-lg hover:shadow-xl"
+                    >
                         <Plus size={18} />
                         <span>New Project</span>
                     </button>
@@ -233,6 +236,12 @@ export const Projects = () => {
                 </div>
             )}
         </div>
+
+        <CreateProjectModal 
+            isOpen={isCreateModalOpen} 
+            onClose={() => setIsCreateModalOpen(false)} 
+            onCreate={handleCreateProject}
+        />
     </div>
   );
 };

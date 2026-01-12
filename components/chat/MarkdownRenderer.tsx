@@ -16,7 +16,8 @@ interface MarkdownRendererProps {
     data: TableData | string;
     visualHint?: 'bar' | 'line' | 'pie' | 'scatter';
   }>;
-  onExpandTable?: (data: TableData, title: string) => void;
+  // Updated to include optional visualHint parameter
+  onExpandTable?: (data: TableData, title: string, visualHint?: string) => void;
 }
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, executionResult, executionResults, onExpandTable }) => {

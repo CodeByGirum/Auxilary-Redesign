@@ -12,6 +12,46 @@ export const executeSQL = async (query: string, data: TableData): Promise<{ type
         return;
       }
 
+      // Polyfill strftime if it doesn't exist (commonly used by models trained on SQLite)
+      if (!alasql.fn.strftime) {
+        alasql.fn.strftime = (format: string, dateStr: string) => {
+          const date = new Date(dateStr);
+          if (isNaN(date.getTime())) return dateStr;
+          
+          return format
+            .replace('%Y', date.getFullYear().toString())
+            .replace('%m', (date.getMonth() + 1).toString().padStart(2, '0'))
+            .replace('%d', date.getDate().toString().padStart(2, '0'))
+            .replace('%H', date.getHours().toString().padStart(2, '0'))
+            .replace('%M', date.getMinutes().toString().padStart(2, '0'))
+            .replace('%S', date.getSeconds().toString().padStart(2, '0'))
+            .replace('%j', Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000).toString().padStart(3, '0'))
+            .replace('%w', date.getDay().toString());
+        };
+      }
+
+      // Polyfill string_split (Fix for: alasql.fn.string_split is not a function)
+      if (!alasql.fn.string_split) {
+        alasql.fn.string_split = (str: string, delimiter: string) => {
+          if (typeof str !== 'string') return [];
+          return str.split(delimiter || ',');
+        };
+      }
+
+      // Polyfill json_extract (often used by Gemini for complex data)
+      if (!alasql.fn.json_extract) {
+        alasql.fn.json_extract = (jsonStr: string, path: string) => {
+          try {
+            const obj = JSON.parse(jsonStr);
+            // Very simple path handler: $.key
+            const key = path.replace('$.', '');
+            return obj[key];
+          } catch {
+            return null;
+          }
+        };
+      }
+
       if (!data || !data.rows) {
         resolve({ type: 'error', data: "No active dataset found for analysis." });
         return;
@@ -27,7 +67,6 @@ export const executeSQL = async (query: string, data: TableData): Promise<{ type
       }
 
       // Clean the query: Remove quotes around 'data' table name to prevent param substitution failure
-      // e.g. FROM "data" -> FROM data
       const cleanQuery = query.replace(/"data"/gi, 'data').replace(/'data'/gi, 'data');
 
       // Replace 'data' keyword with AlaSQL parameter placeholder '?'
@@ -44,7 +83,7 @@ export const executeSQL = async (query: string, data: TableData): Promise<{ type
 
       if (Array.isArray(result) && result.length > 0) {
         // If result is an array of objects, format as TableData
-        if (typeof result[0] === 'object') {
+        if (typeof result[0] === 'object' && result[0] !== null) {
            const headers = Object.keys(result[0]);
            const rows = result.map((r: any, i: number) => ({ ...r, id: `res-${i}` }));
            resolve({ 
@@ -64,7 +103,6 @@ export const executeSQL = async (query: string, data: TableData): Promise<{ type
 
     } catch (e: any) {
       console.error("SQL Execution Error:", e);
-      // Clean up error message for display
       let msg = e.message || "Execution failed";
       if (msg.includes("Parse error")) {
           msg = `Syntax Error: ${msg}. Please ensure keywords are spaced correctly and aliases use snake_case (e.g., AS total_sales).`;

@@ -30,7 +30,7 @@ export const MediaRenderer: React.FC<MediaRendererProps> = ({ url, type }) => {
       <img 
         src={url} 
         alt="Embedded content" 
-        className="w-full h-auto object-cover hover:scale-105 transition-transform duration-500 ease-out"
+        className="w-full h-auto object-cover transition-opacity duration-500 ease-out"
         loading="lazy"
         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
       />

@@ -2,7 +2,7 @@
 import { Project, Notification, Activity, Contact } from './types';
 import { 
   Layout, Globe, Coffee, PenTool, Smartphone, 
-  Briefcase, CreditCard, ShoppingCart, Music 
+  Briefcase, CreditCard, ShoppingCart, Music, PieChart, BarChart3, LineChart, Sparkles, FileText
 } from 'lucide-react';
 
 export const MOCK_PROJECTS: Project[] = [
@@ -122,6 +122,81 @@ export const MOCK_PROJECTS: Project[] = [
     iconColor: 'text-green-500 bg-green-100',
     icon: CreditCard,
     tags: ['Finance', 'Security']
+  },
+];
+
+export const PUBLISHED_NOTEBOOKS = [
+  { 
+    id: 'p1', 
+    title: 'Q4 Ad Spend Audit', 
+    description: 'A comprehensive audit of Meta and Google Ads performance across primary conversion funnels.',
+    author: 'Sarah Connor', 
+    date: 'Jan 15, 2024',
+    category: 'Advertising',
+    gradient: 'bg-gradient-to-br from-[#f472b6] to-[#db2777]',
+    icon: PieChart,
+    likes: 124,
+    reads: '1.2k'
+  },
+  { 
+    id: 'p2', 
+    title: 'Influencer Campaign ROI', 
+    description: 'Measuring the direct and assisted revenue impact of our Q3 creator partnerships.',
+    author: 'Elias K. Wren', 
+    date: 'Dec 10, 2023',
+    category: 'Social',
+    gradient: 'bg-gradient-to-br from-[#60a5fa] to-[#2563eb]',
+    icon: BarChart3,
+    likes: 89,
+    reads: '2.4k'
+  },
+  { 
+    id: 'p3', 
+    title: 'Email Segment Study', 
+    description: 'Behavioral analysis of automated flows vs. weekly blasts for retention optimization.',
+    author: 'Frank Herbert', 
+    date: 'Nov 05, 2023',
+    category: 'CRM',
+    gradient: 'bg-gradient-to-br from-[#fbbf24] to-[#d97706]',
+    icon: LineChart,
+    likes: 245,
+    reads: '3.1k'
+  },
+  { 
+    id: 'p4', 
+    title: 'SEO Keyword Gap 2024', 
+    description: 'Identifying high-volume search opportunities our top 3 competitors are currently ignoring.',
+    author: 'Marketing Ops', 
+    date: 'Feb 12, 2024',
+    category: 'Search',
+    gradient: 'bg-gradient-to-br from-[#818cf8] to-[#4f46e5]',
+    icon: Sparkles,
+    likes: 512,
+    reads: '12k'
+  },
+  { 
+    id: 'p5', 
+    title: 'Brand Sentiment Pulse', 
+    description: 'Analyzing 50,000+ social mentions to gauge the impact of the recent product rebrand.',
+    author: 'Product Team', 
+    date: 'Feb 20, 2024',
+    category: 'Research',
+    gradient: 'bg-gradient-to-br from-[#34d399] to-[#059669]',
+    icon: FileText,
+    likes: 67,
+    reads: '890'
+  },
+  { 
+    id: 'p6', 
+    title: 'Retargeting Leakage', 
+    description: 'Technical investigation into drop-off rates for dynamic product ads (DPA) on mobile.',
+    author: 'Growth Team', 
+    date: 'Mar 01, 2024',
+    category: 'Growth',
+    gradient: 'bg-gradient-to-br from-[#f87171] to-[#dc2626]',
+    icon: BarChart3,
+    likes: 156,
+    reads: '1.5k'
   },
 ];
 

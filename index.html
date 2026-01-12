@@ -26,6 +26,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
 
+    <!-- Pyodide for Python Execution -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+
     <!-- AlaSQL for client-side SQL analysis -->
     <script src="https://cdn.jsdelivr.net/npm/alasql@4"></script>
 
@@ -43,7 +46,29 @@
           scrollbar-width: none;  /* Firefox */
       }
 
-      /* Custom Scrollbar */
+      /* --- Global Custom Scrollbar --- */
+      ::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.05); /* Very subtle in light mode */
+        border-radius: 10px;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.1); /* Subtle in dark mode */
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(0, 0, 0, 0.15);
+      }
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Specific utility for containers if needed */
       .custom-scrollbar::-webkit-scrollbar {
         height: 6px;
         width: 6px;
@@ -52,11 +77,11 @@
         background: transparent;
       }
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, 0.05); /* Very subtle in light mode */
+        background-color: rgba(0, 0, 0, 0.05);
         border-radius: 10px;
       }
       .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.1); /* Subtle in dark mode */
+        background-color: rgba(255, 255, 255, 0.1);
       }
       .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background-color: rgba(0, 0, 0, 0.15);

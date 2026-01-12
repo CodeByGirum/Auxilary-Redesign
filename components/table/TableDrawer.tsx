@@ -1,8 +1,7 @@
 
-
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { TableData } from '../../types/chat';
-import { Grid, Settings2, PieChart, Sparkles, Table as TableIcon, X } from 'lucide-react';
+import { Grid, Settings2, PieChart, Sparkles, Table as TableIcon, X, Check } from 'lucide-react';
 import { DataGridView } from './views/DataGridView';
 import { PivotView } from './views/PivotView';
 import { VisualsView } from './views/VisualsView';
@@ -30,119 +29,93 @@ export const TableDrawer: React.FC<TableDrawerProps> = ({
   mode = 'fixed',
 }) => {
   const [activeTab, setActiveTab] = useState<'data' | 'pivot' | 'visuals' | 'analysis'>('data');
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // Data State
   const [rows, setRows] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   
-  // Lifted View States for Persistence
+  // View States
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortConfig, setSortConfig] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null);
-  
   const [pivotConfig, setPivotConfig] = useState<PivotConfig>({
     rows: [], columns: [], values: [], aggregation: 'sum'
   });
-  
   const [visualsConfig, setVisualsConfig] = useState<{ chartType: 'bar' | 'pie' | 'line', themeColor: string }>({
     chartType: 'bar', themeColor: 'blue'
   });
-  
   const [notebookReport, setNotebookReport] = useState<NotebookReport | null>(null);
 
-  // Initialize State on Data Change (or Switch Tab/File)
+  const saveTimerRef = useRef<any>(null);
+  const lastUpdateRef = useRef<string>('');
+
+  // Initialize once or when forced externally
   useEffect(() => {
     if (data) {
-      setRows(data.rows);
-      setHeaders(data.headers);
+      const dataHash = JSON.stringify({ h: data.headers, rCount: data.rows.length });
+      // Only reset if it's a completely different dataset, not a silent autosave update from parent
+      if (lastUpdateRef.current !== dataHash) {
+        setRows(data.rows);
+        setHeaders(data.headers);
+        lastUpdateRef.current = dataHash;
+      }
 
-      // Restore metadata if available, otherwise reset defaults ONLY if switching files (simulated by data change with mismatched ID or forced logic)
-      // Here we rely on data.metadata to contain the persisted state.
       if (data.metadata) {
          if (data.metadata.filters) setFilters(data.metadata.filters);
          if (data.metadata.sortConfig) setSortConfig(data.metadata.sortConfig);
          if (data.metadata.pivotConfig) setPivotConfig(data.metadata.pivotConfig);
          if (data.metadata.visualsConfig) setVisualsConfig(data.metadata.visualsConfig);
          if (data.metadata.notebookReport) setNotebookReport(data.metadata.notebookReport);
-      } else {
-         // Reset to defaults if no metadata (new file load context)
-         setFilters({});
-         setSortConfig(null);
-         setPivotConfig({ rows: [], columns: [], values: [], aggregation: 'sum' });
-         setVisualsConfig({ chartType: 'bar', themeColor: 'blue' });
-         setNotebookReport(null);
       }
-
-      if (visualHint) {
-        setActiveTab('visuals');
-        if (['bar', 'pie', 'line'].includes(visualHint)) {
-            setVisualsConfig(prev => ({ ...prev, chartType: visualHint as any }));
-        }
-      } else {
-         // Keep current tab active if switching data, unless it's a fresh open? 
-         // For now, let's keep it simple.
+      if (visualHint && ['bar', 'pie', 'line'].includes(visualHint)) {
+          setActiveTab('visuals');
+          setVisualsConfig(prev => ({ ...prev, chartType: visualHint as any }));
       }
     }
-  }, [data, fileName, visualHint]);
+  }, [data, visualHint]);
 
-  // Centralized Save Handler
-  // This updates the parent state with both data and current view configurations
-  const persistState = useCallback((
-    newRows = rows, 
-    newPivot = pivotConfig, 
-    newVisuals = visualsConfig, 
-    newNotebook = notebookReport,
-    newFilters = filters,
-    newSort = sortConfig
-  ) => {
+  // Persist logic - Silent background save
+  const persistState = useCallback(() => {
       const metadata = {
-          pivotConfig: newPivot,
-          visualsConfig: newVisuals,
-          notebookReport: newNotebook,
-          filters: newFilters,
-          sortConfig: newSort
+          pivotConfig,
+          visualsConfig,
+          notebookReport,
+          filters,
+          sortConfig
       };
-      onSave({ headers, rows: newRows, metadata });
+      onSave({ headers, rows, metadata });
+      setLastSaved(new Date());
   }, [headers, rows, pivotConfig, visualsConfig, notebookReport, filters, sortConfig, onSave]);
 
-  // Individual State Setters Wrappers
-  // These update local state AND persist to parent immediately
-  
+  // 3-second Autosave Effect - Truly in the background
+  useEffect(() => {
+    if (!isOpen) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    
+    saveTimerRef.current = setTimeout(() => {
+        persistState();
+    }, 3000);
+
+    return () => {
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, [rows, pivotConfig, visualsConfig, filters, sortConfig, isOpen, persistState]);
+
   const handleRowUpdate = useCallback((id: string, updates: Record<string, any>) => {
-    const newRows = rows.map(r => r.id === id ? { ...r, ...updates } : r);
-    setRows(newRows);
-    persistState(newRows);
-  }, [rows, persistState]);
+    setRows(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+  }, []);
 
   const handleAddRow = useCallback(() => {
     const newRow: any = { id: `row-${Date.now()}` };
     headers.forEach(h => newRow[h] = '');
-    const newRows = [...rows, newRow];
-    setRows(newRows);
-    persistState(newRows);
-  }, [rows, headers, persistState]);
+    setRows(prev => [...prev, newRow]);
+  }, [headers]);
 
   const handleDeleteRow = useCallback((id: string) => {
-    const newRows = rows.filter(r => r.id !== id);
-    setRows(newRows);
-    persistState(newRows);
-  }, [rows, persistState]);
+    setRows(prev => prev.filter(r => r.id !== id));
+  }, []);
 
-  const updatePivotConfig = useCallback((newConfig: PivotConfig) => {
-      setPivotConfig(newConfig);
-      persistState(rows, newConfig);
-  }, [persistState, rows]);
-
-  const updateVisualsConfig = useCallback((newConfig: any) => {
-      setVisualsConfig(newConfig);
-      persistState(rows, pivotConfig, newConfig);
-  }, [persistState, rows, pivotConfig]);
-
-  const updateNotebookReport = useCallback((newReport: NotebookReport | null) => {
-      setNotebookReport(newReport);
-      persistState(rows, pivotConfig, visualsConfig, newReport);
-  }, [persistState, rows, pivotConfig, visualsConfig]);
-
-  // Derived Data Processing for Grid
   const processedRows = useMemo(() => {
     let res = [...rows];
     Object.keys(filters).forEach((key) => {
@@ -161,31 +134,30 @@ export const TableDrawer: React.FC<TableDrawerProps> = ({
     return res;
   }, [rows, filters, sortConfig]);
 
-  const containerClasses =
-    mode === 'inline'
-      ? 'w-full h-full flex flex-col bg-white dark:bg-[#1e1e1e] overflow-hidden'
-      : `fixed inset-y-0 right-0 z-[60] w-[95vw] md:w-[90vw] lg:w-[1200px] bg-white dark:bg-[#1e1e1e] shadow-2xl transform transition-transform duration-300 ease-in-out border-l border-gray-200 dark:border-[#333] flex flex-col ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`;
+  const containerClasses = mode === 'inline'
+    ? 'w-full h-full flex flex-col bg-white dark:bg-[#1e1e1e] overflow-hidden'
+    : `fixed inset-y-0 right-0 z-[60] w-[95vw] md:w-[90vw] lg:w-[1200px] bg-white dark:bg-[#1e1e1e] shadow-2xl transform transition-transform duration-300 ease-in-out border-l border-gray-200 dark:border-[#333] flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`;
 
   if (mode === 'inline' && !isOpen) return null;
 
   return (
     <div className={containerClasses}>
-      {/* Header Section */}
       <div className="h-14 flex items-center justify-between px-6 flex-shrink-0 bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-md border-b border-gray-200 dark:border-[#333] z-10">
         <div className="flex items-center gap-4">
-          <div className="flex items-center justify-center w-8 h-8 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
+          <div className="flex items-center justify-center w-8 h-8 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400 shadow-sm">
             <TableIcon size={18} />
           </div>
           <div className="flex flex-col">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">{fileName}</h2>
-            <span className="text-[10px] text-gray-500 dark:text-gray-400">Data View</span>
+            <h2 className="text-sm font-medium text-gray-900 dark:text-white tracking-tight">{fileName}</h2>
+            <div className="flex items-center gap-1.5">
+                <span className="text-[9px] font-medium uppercase tracking-widest text-gray-400">
+                    {lastSaved ? `Autosaved ${lastSaved.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : 'Live Workspace'}
+                </span>
+            </div>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="hidden md:flex bg-gray-100 dark:bg-[#2a2a2a] p-1 rounded-lg">
+        <div className="hidden md:flex bg-gray-100 dark:bg-[#2a2a2a] p-1 rounded-xl">
           {[
             { id: 'data', label: 'Grid', icon: Grid },
             { id: 'pivot', label: 'Pivot', icon: Settings2 },
@@ -195,58 +167,34 @@ export const TableDrawer: React.FC<TableDrawerProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+              className={`flex items-center gap-2 px-4 py-1.5 text-[11px] font-medium uppercase tracking-wider rounded-lg transition-all duration-300 ${
                 activeTab === tab.id
                   ? 'bg-white dark:bg-[#333] text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
-              <tab.icon size={14} />
+              <tab.icon size={13} strokeWidth={2} />
               {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              persistState(); // Explicit save call
-              if (mode === 'fixed') onClose();
-            }}
-            className="px-4 py-1.5 bg-black dark:bg-white text-white dark:text-black text-xs font-medium rounded-lg hover:opacity-80 transition-opacity"
+            onClick={persistState}
+            className="flex items-center gap-2 px-5 py-1.5 bg-black dark:bg-white text-white dark:text-black text-xs font-medium rounded-full hover:opacity-80 transition-all active:scale-95 shadow-sm"
           >
             Save
           </button>
-          {mode === 'fixed' && (
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-[#333] rounded-lg transition-colors"
-            >
-              <X size={18} />
-            </button>
-          )}
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#333] rounded-full transition-all"
+          >
+            <X size={18} strokeWidth={2} />
+          </button>
         </div>
       </div>
 
-      {/* Mobile Navigation */}
-      <div className="md:hidden flex items-center gap-1 px-4 bg-white dark:bg-[#1e1e1e] border-b border-gray-200 dark:border-[#333] overflow-x-auto no-scrollbar">
-        {[{ id: 'data', label: 'Grid' }, { id: 'pivot', label: 'Pivot' }, { id: 'visuals', label: 'Chart' }, { id: 'analysis', label: 'Notebook' }].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`flex items-center gap-2 px-4 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === tab.id
-                ? 'border-black dark:border-white text-black dark:text-white'
-                : 'border-transparent text-gray-500 dark:text-gray-400'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Content Area */}
       <div className="flex-1 overflow-hidden relative bg-[#F5F5F7] dark:bg-[#1e1e1e]">
         {activeTab === 'data' && (
           <DataGridView
@@ -256,9 +204,9 @@ export const TableDrawer: React.FC<TableDrawerProps> = ({
             onAddRow={handleAddRow}
             onDeleteRow={handleDeleteRow}
             filters={filters}
-            setFilters={(f) => { setFilters(f); persistState(rows, pivotConfig, visualsConfig, notebookReport, f, sortConfig); }}
+            setFilters={setFilters}
             sortConfig={sortConfig}
-            setSortConfig={(s) => { setSortConfig(s); persistState(rows, pivotConfig, visualsConfig, notebookReport, filters, s); }}
+            setSortConfig={setSortConfig}
           />
         )}
         {activeTab === 'pivot' && (
@@ -266,7 +214,7 @@ export const TableDrawer: React.FC<TableDrawerProps> = ({
               headers={headers} 
               rows={processedRows} 
               config={pivotConfig}
-              setConfig={updatePivotConfig}
+              setConfig={setPivotConfig}
            />
         )}
         {activeTab === 'visuals' && (
@@ -275,7 +223,7 @@ export const TableDrawer: React.FC<TableDrawerProps> = ({
             rows={processedRows}
             fileName={fileName}
             config={visualsConfig}
-            setConfig={updateVisualsConfig}
+            setConfig={setVisualsConfig}
           />
         )}
         {activeTab === 'analysis' && (
@@ -284,7 +232,7 @@ export const TableDrawer: React.FC<TableDrawerProps> = ({
             rows={processedRows}
             fileName={fileName}
             report={notebookReport}
-            setReport={updateNotebookReport}
+            setReport={setNotebookReport}
             triggerOnMount={!notebookReport}
           />
         )}

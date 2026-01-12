@@ -1,17 +1,26 @@
-
 import React from 'react';
 import { Share2 } from 'lucide-react';
+import { useToast } from '../App';
 
 interface TopBarProps {
   currentPath: string;
 }
 
 export const TopBar = ({ currentPath }: TopBarProps) => {
+  const { showToast } = useToast();
+
   const getTitle = () => {
     const path = currentPath;
     if (path === '/') return 'New Chat';
     if (path === '/search') return 'Search';
     return path.substring(1).charAt(0).toUpperCase() + path.slice(2);
+  };
+
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Workspace link copied to clipboard');
+    });
   };
 
   return (
@@ -25,7 +34,10 @@ export const TopBar = ({ currentPath }: TopBarProps) => {
 
       {/* Right Actions */}
       <div className="flex items-center gap-1">
-        <button className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-[#2f2f2f] dark:text-gray-400 rounded-md transition-colors">
+        <button 
+          onClick={handleShare}
+          className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-[#2f2f2f] dark:text-gray-400 rounded-md transition-colors"
+        >
           <Share2 size={18} strokeWidth={1.5} />
         </button>
       </div>
